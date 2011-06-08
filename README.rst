@@ -152,6 +152,7 @@ An example for an Apache configuration file (not the ``{0}`` inside the file, wh
     </VirtualHost>
 
 Note that this Apache configuration implies the following:
+
 - Django is contained in our project as a subdirectory (or perhaps a Git submodule).
   This allows us to use different Django versions on the same server, and even change Django and upload it to the production server without packing and distributing anything.
 - Our project root contains a script named ``wsgi.py`` which is used by Apache's WSGI module.
