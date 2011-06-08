@@ -188,3 +188,11 @@ Now we can finally use some commands::
     ./manage.py giftcard_maintenance  # Enter maintenance mode
     # work work work...
     ./manage.py giftcard_deploy       # Deploy the new site and exit maintenance mode
+
+How does Giftcard know the password to my servers?
+--------------------------------------------------
+It doesn't.
+
+Giftcard assumes you store your SSH keys in your ``.ssh/config`` per-server.
+
+Fabric uses your stored keys to access your servers. Giftcard doesn't manage your SSH keys because it's contained in your source control and this is rather unsafe.
