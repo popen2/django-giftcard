@@ -52,7 +52,7 @@ class Command(BaseCommand):
             if current_config_files:
                 fabric.api.sudo('rm -f ' + ' '.join(current_config_files))
             with tempfile.NamedTemporaryFile() as local_conf:
-                local_conf.write(file(os.path.join(project_root, 'apache2.conf')).read().format(remote_root))
+                local_conf.write(file(os.path.join(self.project_root, 'apache2.conf')).read().format(remote_root))
                 local_conf.flush()
                 fabric.api.put(local_conf.name, our_config_filename)
         fabric.api.sudo('rm -f ' + host_config['maintenance_hook'])
