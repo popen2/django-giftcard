@@ -1,16 +1,13 @@
-from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings
+from ..base_command import GiftcardCommand, CommandError
 import fabric.api
 
-class Command(BaseCommand):
+class Command(GiftcardCommand):
     def handle(self, *args, **kwargs):
+        from django.conf import settings
         for host in settings.GIFTCARD_HOSTS:
             with fabric.api.settings(host_string=host):
                 self._upgrade()
                 self._install_packages()
-
-    def host_config(self):
-        return settings.GIFTCARD_HOSTS[fabric.api.env.host_string]
 
     def _upgrade(self):
         '''Install any pending updates (we assume that some cron

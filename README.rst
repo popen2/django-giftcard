@@ -76,6 +76,29 @@ You can use the following bootstrap configuration by opening your ``settings.py`
             'pip_packages'    : [                                # Like apt_packages, but for easy_install
                 'psycopg2',
             ],
+
+            'web_server_config': {
+                'unix_user': 'www-data',
+                'fqdn': 'site.example.com',
+                'bad_fqdns': (
+                    r'^site$',
+                    r'^site\.example$',
+                    r'^old-name$',
+                    r'^old-name\.old-example$',
+                    r'^old-name\.old-example\.org$',
+                ),
+                'ban_msie_redirect': '/static/no-ie.html',
+                'compression': True,
+                'ssl_certificate' : {
+                    'certificate_file': '/opt/ssl/server.crt',
+                    'private_key_file': '/opt/ssl/server.key',
+                },
+                'static_paths': (
+                    ('/static/admin', os.path.join('/opt', 'PROJECT_NAME', 'django/django/contrib/admin/static/admin')),
+                    ('/static'      , os.path.join('/opt', 'PROJECT_NAME', 'static')),
+                    ('/media'       , os.path.join('/opt', 'PROJECT_NAME', 'media')),
+                ),
+            },
         },
     }
 
@@ -93,6 +116,14 @@ As you can see, ``GIFTCARD_HOSTS`` is a regular dictionary that maps between SSH
     This configuration is used in the ``gc_install_pkg`` command.
 ``pip_packages``
     Exactly like ``apt_packages``, but for ``easy_install``.
+
+``web_server_config`` holds the following:
+    ``unix_user`` is the UNIX username that should own the web server.
+    ``fqdn`` is the fully qualified domain name, in our example it is site.example.com .
+    ``bad_fqdns`` is a list/tuple of all FQDN's we want to redirect to our actual FQDN. In our example, we ban site, site.example and some old URL's users have gotten used to, like old-name.old-example.org. This is useful after an FQDN change to help users get used to the new FQDN, or when users in the local network surf to URL's without their DNS suffix, and then copy-paste them to WAN users.
+    ``ban_msie_redirect`` is a hook that allows blocking Microsoft Internet Explorer by redirecting any MSIE browsers to an explicit page, usually recommending the user to upgrade to a browser software, rather than MSIE which is not a browser.
+    ``ssl_certificate``, when exists in the configuration, makes Giftcard generate appropriate configuration for listening on port 443 and respecting SSL.
+    ``static_paths`` is the configuration for static files.
 
 Apache configuration
 --------------------
