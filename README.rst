@@ -127,66 +127,10 @@ As you can see, ``GIFTCARD_HOSTS`` is a regular dictionary that maps between SSH
 
 Apache configuration
 --------------------
-Giftcard looks for a file named ``apache2.conf`` in the project root (where we placed the ``.giftcard-root`` file.)
+The configuration for the webserver is automatically generated.
+At the moment it's not possible to manually extend the configuration. However, it is rather easy to add new configuration options in 'web_server_config' and respond to them for each web server.
 
-This isn't an ordinary Apache configuration file, but a template which required one parameter -- the remote project root.
-
-An example for an Apache configuration file (not the ``{0}`` inside the file, which is where Giftcard will plant the remote project root)::
-
-    <VirtualHost *:80>
-      ServerAdmin example
-      ServerAlias example.com
-    
-      DocumentRoot {0}/static
-    
-      LogLevel warn
-    
-      WSGIDaemonProcess www-data processes=4 maximum-requests=1024 threads=1
-      WSGIProcessGroup www-data
-    
-      WSGIScriptAlias / {0}/wsgi.py
-    
-      # Insert filter
-      SetOutputFilter DEFLATE
-    
-      # Netscape 4.x has some problems...
-      BrowserMatch ^Mozilla/4 gzip-only-text/html
-    
-      # Netscape 4.06-4.08 have some more problems
-      BrowserMatch ^Mozilla/4\.0[678] no-gzip
-    
-      # MSIE masquerades as Netscape, but it is fine
-      # BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
-    
-      # NOTE: Due to a bug in mod_setenvif up to Apache 2.0.48
-      # the above regex won't work. You can use the following
-      # workaround to get the desired effect:
-      BrowserMatch \bMSI[E] !no-gzip !gzip-only-text/html
-    
-      # Don't compress images
-      SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png)$ no-gzip dont-vary
-    
-      Alias /static/admin "{0}/django/django/contrib/admin/media"
-      <Location "/static/admin">
-        SetHandler None
-      </Location>
-    
-      Alias /static "{0}/static"
-      <Location "/static">
-        SetHandler None
-      </Location>
-    
-      Alias /media "{0}/media"
-      <Location "/media">
-        SetHandler None
-      </Location>
-    </VirtualHost>
-
-Note that this Apache configuration implies the following:
-
-- Django is contained in our project as a subdirectory (or perhaps a Git submodule).
-  This allows us to use different Django versions on the same server, and even change Django and upload it to the production server without packing and distributing anything.
-- Our project root contains a script named ``wsgi.py`` which is used by Apache's WSGI module.
+Note that the generated configuration assumes to be running on the WSGI plugin, and that our project root contains a script named ``wsgi.py``.
 
 Sample wsgi.py
 --------------
@@ -211,6 +155,8 @@ Executing it
 That's it.
 
 Now we can finally use some commands::
+
+    ./manage.py gc_web_config   # Show the configuration file to be generated for each server
 
     ./manage.py gc_install_pkg  # Goes into each server and verifies its packages
 
