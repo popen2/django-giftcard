@@ -86,6 +86,7 @@ def _virtual_server_common_config(protocol, local_project_root, remote_project_r
 def _ssl_config(protocol, local_project_root, remote_project_root, web_server_config):
     return '\n'.join([
         '  SSLEngine on',
+        '  SSLOptions +StdEnvVars +ExportCertData',
         '  SSLCertificateFile '      + web_server_config['ssl_certificate']['certificate_file'],
         '  SSLCertificateKeyFile '   + web_server_config['ssl_certificate']['private_key_file'],
     ])
