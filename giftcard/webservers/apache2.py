@@ -89,6 +89,7 @@ def _ssl_config(protocol, local_project_root, remote_project_root, web_server_co
         '  SSLOptions +StdEnvVars +ExportCertData',
         '  SSLCertificateFile '      + web_server_config['ssl_certificate']['certificate_file'],
         '  SSLCertificateKeyFile '   + web_server_config['ssl_certificate']['private_key_file'],
+        '  SSLCertificateChainFile ' + web_server_config['ssl_certificate']['certificate_chain_file'],
     ])
 
 def _virtual_server(protocol, local_project_root, remote_project_root, web_server_config):
