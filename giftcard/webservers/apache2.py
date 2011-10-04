@@ -64,11 +64,16 @@ def _static_paths(protocol, local_project_root, remote_project_root, web_server_
         for url, abs_path in web_server_config.get('static_paths', [])
     ])
 
-def _virtual_server_common_config(protocol, local_project_root, remote_project_root, web_server_config):
+def _virtual_server_prolougue(protocol, local_project_root, remote_project_root, web_server_config):
     return '\n'.join([
         '  ServerAdmin ' + settings.ADMINS[0][1],
         '  ServerName ' + web_server_config['fqdn'],
         '  LogLevel warn',
+    ])
+
+def _virtual_server_config(protocol, local_project_root, remote_project_root, web_server_config):
+    return '\n'.join([
+        _virtual_server_prolougue(protocol, local_project_root, remote_project_root, web_server_config),
         '',
         _ban_msie(protocol, local_project_root, remote_project_root, web_server_config),
         '',
@@ -92,16 +97,22 @@ def _ssl_config(protocol, local_project_root, remote_project_root, web_server_co
         '  SSLCertificateChainFile ' + web_server_config['ssl_certificate']['certificate_chain_file'],
     ])
 
+def _virtual_server_that_redirects(protocol, target_protocol, local_project_root, remote_project_root, web_server_config):
+    return '   Redirect permanent / {}://{}/'.format(target_protocol, web_server_config['fqdn'])
+
 def _virtual_server(protocol, local_project_root, remote_project_root, web_server_config):
+    print web_server_config.get('https_only', None)
     return dict(
         http = '\n'.join([
             '<VirtualHost *:80>',
-            _virtual_server_common_config(protocol, local_project_root, remote_project_root, web_server_config),
+            (_virtual_server_that_redirects(protocol, 'https', local_project_root, remote_project_root, web_server_config)
+             if web_server_config.get('https_only', False) else
+             _virtual_server_config(protocol, local_project_root, remote_project_root, web_server_config)),
             '</VirtualHost>',
         ]),
         https = '\n'.join([
             '<VirtualHost *:443>',
-            _virtual_server_common_config(protocol, local_project_root, remote_project_root, web_server_config),
+            _virtual_server_config(protocol, local_project_root, remote_project_root, web_server_config),
             '',
             _ssl_config(protocol, local_project_root, remote_project_root, web_server_config),
             '</VirtualHost>',
