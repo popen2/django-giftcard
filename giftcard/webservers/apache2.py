@@ -92,9 +92,10 @@ def _ssl_config(protocol, local_project_root, remote_project_root, web_server_co
     return '\n'.join([
         '  SSLEngine on',
         '  SSLOptions +StdEnvVars +ExportCertData',
-        '  SSLCertificateFile '      + web_server_config['ssl_certificate']['certificate_file'],
-        '  SSLCertificateKeyFile '   + web_server_config['ssl_certificate']['private_key_file'],
-        '  SSLCertificateChainFile ' + web_server_config['ssl_certificate']['certificate_chain_file'],
+        '  SSLUserName SSL_CLIENT_S_DN',
+        '  SSLCertificateFile '      + web_server_config['ssl']['certificate_file'],
+        '  SSLCertificateKeyFile '   + web_server_config['ssl']['private_key_file'],
+        '  SSLCertificateChainFile ' + web_server_config['ssl']['certificate_chain_file'],
     ])
 
 def _virtual_server_that_redirects(protocol, target_protocol, local_project_root, remote_project_root, web_server_config):
@@ -106,7 +107,7 @@ def _virtual_server(protocol, local_project_root, remote_project_root, web_serve
         http = '\n'.join([
             '<VirtualHost *:80>',
             (_virtual_server_that_redirects(protocol, 'https', local_project_root, remote_project_root, web_server_config)
-             if web_server_config.get('https_only', False) else
+             if web_server_config.get('ssl', {}).get('only', False) else
              _virtual_server_config(protocol, local_project_root, remote_project_root, web_server_config)),
             '</VirtualHost>',
         ]),
@@ -126,7 +127,7 @@ def get_configuration_file(local_project_root, host_config):
     configuration_file = '\n'.join([
         _global_wsgi_configuration(local_project_root, remote_project_root, web_server_config),
         _virtual_server('http', local_project_root, remote_project_root, web_server_config),
-        _virtual_server('https', local_project_root, remote_project_root, web_server_config) if web_server_config.get('ssl_certificate', None) else '',
+        _virtual_server('https', local_project_root, remote_project_root, web_server_config) if web_server_config.get('ssl', None) else '',
     ])
 
     return configuration_file
