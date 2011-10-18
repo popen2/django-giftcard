@@ -89,7 +89,7 @@ You can use the following bootstrap configuration by opening your ``settings.py`
                 ),
                 'ban_msie_redirect': '/static/no-ie.html',
                 'compression': True,
-                'ssl_certificate' : {
+                'ssl' : {
                     'certificate_file': '/opt/ssl/server.crt',
                     'private_key_file': '/opt/ssl/server.key',
                 },
@@ -122,7 +122,7 @@ As you can see, ``GIFTCARD_HOSTS`` is a regular dictionary that maps between SSH
     ``fqdn`` is the fully qualified domain name, in our example it is site.example.com .
     ``bad_fqdns`` is a list/tuple of all FQDN's we want to redirect to our actual FQDN. In our example, we ban site, site.example and some old URL's users have gotten used to, like old-name.old-example.org. This is useful after an FQDN change to help users get used to the new FQDN, or when users in the local network surf to URL's without their DNS suffix, and then copy-paste them to WAN users.
     ``ban_msie_redirect`` is a hook that allows blocking Microsoft Internet Explorer by redirecting any MSIE browsers to an explicit page, usually recommending the user to upgrade to a browser software, rather than MSIE which is not a browser.
-    ``ssl_certificate``, when exists in the configuration, makes Giftcard generate appropriate configuration for listening on port 443 and respecting SSL.
+    ``ssl``, when exists in the configuration, makes Giftcard generate appropriate configuration for listening on port 443 and respecting SSL.
     ``static_paths`` is the configuration for static files.
 
 Apache configuration

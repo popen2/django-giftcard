@@ -88,14 +88,30 @@ def _virtual_server_config(protocol, local_project_root, remote_project_root, we
         _static_paths(protocol, local_project_root, remote_project_root, web_server_config),
     ])
 
+def _require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config):
+    ssl_config = web_server_config.get('ssl', None)
+    assert ssl_config # Called from within an SSL context
+    return '\n'.join([
+        '\n'.join([
+            '  <Location "{}">'.format(url),
+            '    SSLVerifyClient require',
+            '  </Location>',
+            ])
+        for url in ssl_config.get('require_certificate_paths', [])
+    ])
+
 def _ssl_config(protocol, local_project_root, remote_project_root, web_server_config):
+    ssl_config = web_server_config.get('ssl', None)
+    if not ssl_config:
+        return ''
     return '\n'.join([
         '  SSLEngine on',
         '  SSLOptions +StdEnvVars +ExportCertData',
         '  SSLUserName SSL_CLIENT_S_DN',
-        '  SSLCertificateFile '      + web_server_config['ssl']['certificate_file'],
-        '  SSLCertificateKeyFile '   + web_server_config['ssl']['private_key_file'],
-        '  SSLCertificateChainFile ' + web_server_config['ssl']['certificate_chain_file'],
+        '  SSLCertificateFile '      + ssl_config['certificate_file'],
+        '  SSLCertificateKeyFile '   + ssl_config['private_key_file'],
+        '  SSLCertificateChainFile ' + ssl_config['certificate_chain_file'],
+        _require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config),
     ])
 
 def _virtual_server_that_redirects(protocol, target_protocol, local_project_root, remote_project_root, web_server_config):
