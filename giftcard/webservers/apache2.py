@@ -111,6 +111,7 @@ def _ssl_config(protocol, local_project_root, remote_project_root, web_server_co
         '  SSLCertificateFile '      + ssl_config['certificate_file'],
         '  SSLCertificateKeyFile '   + ssl_config['private_key_file'],
         '  SSLCertificateChainFile ' + ssl_config['certificate_chain_file'],
+        '  SSLCACertificateFile '    + ssl_config['allowed_cas'],
         _require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config),
     ])
 
