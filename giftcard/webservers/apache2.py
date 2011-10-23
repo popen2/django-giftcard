@@ -94,7 +94,7 @@ def _require_certificate_paths(protocol, local_project_root, remote_project_root
     return '\n'.join([
         '\n'.join([
             '  <Location "{}">'.format(url),
-            '    SSLVerifyClient require',
+            '    SSLVerifyClient optional_no_ca',
             '  </Location>',
             ])
         for url in ssl_config.get('require_certificate_paths', [])
