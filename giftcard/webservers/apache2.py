@@ -108,6 +108,7 @@ def _ssl_config(protocol, local_project_root, remote_project_root, web_server_co
         '  SSLEngine on',
         '  SSLOptions +StdEnvVars +ExportCertData',
         '  SSLUserName SSL_CLIENT_S_DN',
+        '  SSLProtocol all -SSLv2',
         '  SSLCertificateFile '      + ssl_config['certificate_file'],
         '  SSLCertificateKeyFile '   + ssl_config['private_key_file'],
         '  SSLCertificateChainFile ' + ssl_config['certificate_chain_file'],
