@@ -157,7 +157,7 @@ def _virtual_server(protocol, local_project_root, remote_project_root, web_serve
             '<VirtualHost *:443>',
             _virtual_server_config(protocol, local_project_root, remote_project_root, web_server_config),
             '',
-            _gnutls_config(protocol, local_project_root, remote_project_root, web_server_config),
+            _openssl_config(protocol, local_project_root, remote_project_root, web_server_config),
             '</VirtualHost>',
         ]),
     )[protocol] + '\n'
