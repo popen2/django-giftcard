@@ -88,19 +88,19 @@ def _virtual_server_config(protocol, local_project_root, remote_project_root, we
         _static_paths(protocol, local_project_root, remote_project_root, web_server_config),
     ])
 
-def _require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config):
-    ssl_config = web_server_config.get('ssl', None)
-    assert ssl_config # Called from within an SSL context
-    return '\n'.join([
-        '\n'.join([
-            '  <Location "{}">'.format(url),
-            '    SSLVerifyClient optional_no_ca',
-            '  </Location>',
-            ])
-        for url in ssl_config.get('require_certificate_paths', [])
-    ])
+def _openssl_config(protocol, local_project_root, remote_project_root, web_server_config):
+    def _require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config):
+        ssl_config = web_server_config.get('ssl', None)
+        assert ssl_config # Called from within an SSL context
+        return '\n'.join([
+            '\n'.join([
+                '  <Location "{}">'.format(url),
+                '    SSLVerifyClient optional_no_ca',
+                '  </Location>',
+                ])
+            for url in ssl_config.get('require_certificate_paths', [])
+        ])
 
-def _ssl_config(protocol, local_project_root, remote_project_root, web_server_config):
     ssl_config = web_server_config.get('ssl', None)
     if not ssl_config:
         return ''
@@ -113,6 +113,30 @@ def _ssl_config(protocol, local_project_root, remote_project_root, web_server_co
         '  SSLCertificateKeyFile '   + ssl_config['private_key_file'],
         '  SSLCertificateChainFile ' + ssl_config['certificate_chain_file'],
         '  SSLCACertificateFile '    + ssl_config['allowed_cas'],
+        _require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config),
+    ])
+
+def _gnutls_config(protocol, local_project_root, remote_project_root, web_server_config):
+    def _require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config):
+        ssl_config = web_server_config.get('ssl', None)
+        assert ssl_config # Called from within an SSL context
+        return '\n'.join([
+            '\n'.join([
+                '  <Location "{}">'.format(url),
+                '    GnuTLSClientVerify request',
+                '  </Location>',
+                ])
+            for url in ssl_config.get('require_certificate_paths', [])
+        ])
+
+    ssl_config = web_server_config.get('ssl', None)
+    if not ssl_config:
+        return ''
+    return '\n'.join([
+        '  GnuTLSEnable on',
+        '  GnuTLSCertificateFile ' + ssl_config['certificate_file'],
+        '  GnuTLSKeyFile '         + ssl_config['private_key_file'],
+        '  GnuTLSPriorities NORMAL',
         _require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config),
     ])
 
@@ -133,7 +157,7 @@ def _virtual_server(protocol, local_project_root, remote_project_root, web_serve
             '<VirtualHost *:443>',
             _virtual_server_config(protocol, local_project_root, remote_project_root, web_server_config),
             '',
-            _ssl_config(protocol, local_project_root, remote_project_root, web_server_config),
+            _gnutls_config(protocol, local_project_root, remote_project_root, web_server_config),
             '</VirtualHost>',
         ]),
     )[protocol] + '\n'
