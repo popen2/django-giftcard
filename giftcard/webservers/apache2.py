@@ -174,10 +174,6 @@ def get_configuration_file(local_project_root, host_config):
 
     return configuration_file
 
-def enter_maintenance(local_project_root, host_config):
-    fabric.api.sudo('touch ' + host_config['maintenance_hook'])
-    fabric.api.sudo('/etc/init.d/apache2 reload')
-
 def configure(local_project_root, host_config):
     remote_root = host_config['remote_root']
     our_config_filename = 'giftcard'
@@ -190,5 +186,4 @@ def configure(local_project_root, host_config):
             local_conf.write(get_configuration_file(local_project_root, host_config))
             local_conf.flush()
             fabric.api.put(local_conf.name, our_config_filename)
-    fabric.api.sudo('rm -f ' + host_config['maintenance_hook'])
     fabric.api.sudo('/etc/init.d/apache2 reload')

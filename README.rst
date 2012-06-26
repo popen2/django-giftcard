@@ -62,7 +62,6 @@ You can use the following bootstrap configuration by opening your ``settings.py`
         'root@www.yourserver.com': {                             # Replace with the user@server of your deployment
             'web_server'      : 'apache2',                       # Currently, only apache2 is supported
             'remote_root'     : '/opt/PROJECT_NAME',             # This is where the project will be deployed
-            'maintenance_hook': '/opt/PROJECT_NAME-maintenance', # More on this later...
 
             'apt_packages'    : [                                # List the APT packages your want to install
                 'apache2',
@@ -108,9 +107,6 @@ As you can see, ``GIFTCARD_HOSTS`` is a regular dictionary that maps between SSH
     Currently can only be set to ``apache2``. In the future it will be possible to add ``nginx`` and ``lighttpd``.
 ``remote_root``
     The remote path in which the project will be deployed. Giftcard simply ``rsync``s the contents of the local project root to the remote side.
-``maintenance_hook``
-    This file is created when launching the ``gc_maintenance`` command and deleted every time the site is deployed.
-    When we program our site (or maybe Apache configuration file) to respond to this path, we can have each web server enter maintenance mode before upgrading it, to avoid messy error-500 pages during the upgrade.
 ``apt_packages``
     List of packages passed directly to ``apt-get`` for installation.
     This configuration is used in the ``gc_install_pkg`` command.
@@ -161,10 +157,6 @@ Now we can finally use some commands::
     ./manage.py gc_install_pkg  # Goes into each server and verifies its packages
 
     ./manage.py gc_deploy       # Deploying our project, configuring & restarting Apache
-
-    ./manage.py gc_maintenance  # Enter maintenance mode
-    # work work work...
-    ./manage.py gc_deploy       # Deploy the new site and exit maintenance mode
 
 How does Giftcard know the password to my servers?
 --------------------------------------------------
