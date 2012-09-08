@@ -104,17 +104,24 @@ def _openssl_config(protocol, local_project_root, remote_project_root, web_serve
     ssl_config = web_server_config.get('ssl', None)
     if not ssl_config:
         return ''
-    return '\n'.join([
+
+    lines =  [
         '  SSLEngine on',
         '  SSLOptions +StdEnvVars +ExportCertData',
         '  SSLUserName SSL_CLIENT_S_DN',
         '  SSLProtocol all -SSLv2',
-        '  SSLCertificateFile '      + ssl_config['certificate_file'],
-        '  SSLCertificateKeyFile '   + ssl_config['private_key_file'],
-        '  SSLCertificateChainFile ' + ssl_config['certificate_chain_file'],
-        '  SSLCACertificateFile '    + ssl_config['allowed_cas'],
-        _require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config),
-    ])
+        '  SSLCertificateFile '    + ssl_config['certificate_file'],
+        '  SSLCertificateKeyFile ' + ssl_config['private_key_file'],
+    ]
+
+    if 'certificate_chain_file' in ssl_config:
+        lines.append('  SSLCertificateChainFile ' + ssl_config['certificate_chain_file'])
+
+    if 'allowed_cas' in ssl_config:
+        lines.append('  SSLCACertificateFile ' + ssl_config['allowed_cas'])
+
+    lines.extend(_require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config))
+    return '\n'.join(lines)
 
 def _gnutls_config(protocol, local_project_root, remote_project_root, web_server_config):
     def _require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config):
