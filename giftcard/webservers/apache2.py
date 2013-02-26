@@ -120,7 +120,7 @@ def _openssl_config(protocol, local_project_root, remote_project_root, web_serve
     if 'allowed_cas' in ssl_config:
         lines.append('  SSLCACertificateFile ' + ssl_config['allowed_cas'])
 
-    lines.extend(_require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config))
+    lines.append(_require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config))
     return '\n'.join(lines)
 
 def _gnutls_config(protocol, local_project_root, remote_project_root, web_server_config):
