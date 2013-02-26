@@ -9,7 +9,8 @@ class Command(GiftcardCommand):
             with fabric.api.settings(host_string=host):
                 webserver_handler = self.webserver_handler()
                 self._sync_project(local_project_root)
-                webserver_handler.configure(local_project_root, self.host_config())
+                if webserver_handler:
+                    webserver_handler.configure(local_project_root, self.host_config())
 
     def _sync_project(self, local_project_root):
         remote_root = self.host_config()['remote_root']
