@@ -43,8 +43,12 @@ def _compression(protocol, local_project_root, remote_project_root, web_server_c
     ])
 
 def _global_wsgi_configuration(local_project_root, remote_project_root, web_server_config):
+    processes = web_server_config['process_number'] if 'process_number' in web_server_config else '4'
+    threads = web_server_config['thread_number'] if 'thread_number' in web_server_config else '1'
     return '\n'.join([
-        'WSGIDaemonProcess {} processes=4 maximum-requests=1024 threads=1'.format(web_server_config['unix_user']),
+        'WSGIDaemonProcess {} processes={} maximum-requests=1024 threads={}'.format(web_server_config['unix_user'],
+                                                                                    processes,
+                                                                                    threads),
         'WSGIProcessGroup ' + web_server_config['unix_user'],
     ])
 
