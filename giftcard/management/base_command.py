@@ -8,9 +8,10 @@ class GiftcardCommand(BaseCommand):
         return settings.GIFTCARD_HOSTS[fabric.api.env.host_string]
 
     def webserver_handler(self):
-        from ..webservers import apache2
+        from ..webservers import apache2, nginx
 
         webserver_handlers = dict(
+            nginx = nginx,
             apache2 = apache2,
         )
 
