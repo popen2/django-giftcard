@@ -95,6 +95,16 @@ def _virtual_server_prolougue(protocol, local_project_root, remote_project_root,
         '  server_name {};'.format(web_server_config['fqdn']),
     ])
 
+def _uwsgi_server(protocol, local_project_root, remote_project_root, web_server_config):
+    return '\n'.join([
+        '  location / {',
+        '    include     /etc/nginx/uwsgi_params;',
+        '    uwsgi_param X-Real-IP $remote_addr;',
+        '    uwsgi_param Host $http_host;',
+        '    uwsgi_pass  django;',
+        '  }',
+    ])
+
 def _virtual_server_config(protocol, local_project_root, remote_project_root, web_server_config):
     return '\n'.join([
         _virtual_server_prolougue(protocol, local_project_root, remote_project_root, web_server_config),
@@ -106,6 +116,8 @@ def _virtual_server_config(protocol, local_project_root, remote_project_root, we
         _favicon_redirect(protocol, local_project_root, remote_project_root, web_server_config),
         '',
         _static_paths(protocol, local_project_root, remote_project_root, web_server_config),
+        '',
+        _uwsgi_server(protocol, local_project_root, remote_project_root, web_server_config),
     ])
 
 def _openssl_config(protocol, local_project_root, remote_project_root, web_server_config):
@@ -173,17 +185,8 @@ def _virtual_server(protocol, local_project_root, remote_project_root, web_serve
         ]),
     )[protocol] + '\n'
 
-def get_configuration_file(local_project_root, host_config):
-    web_server_config = host_config['web_server_config']
-    remote_project_root = host_config['remote_root']
+def _nginx_configuration(local_project_root, remote_project_root, web_server_config):
     configuration_file = '\n'.join([
-        '#' * 80,
-        'Supervisor config: /etc/supervisor/conf.d/uwsgi.conf',
-        '#' * 80,
-        _supervisor_configuration(local_project_root, remote_project_root, web_server_config),
-        '#' * 80,
-        'Nginx config: /etc/nginx/sites-enabled/giftcard',
-        '#' * 80,
         _fqdn_redirections('https', local_project_root, remote_project_root, web_server_config),
         _virtual_server('http', local_project_root, remote_project_root, web_server_config),
         _virtual_server('https', local_project_root, remote_project_root, web_server_config) if web_server_config.get('ssl', None) else '',
@@ -191,16 +194,40 @@ def get_configuration_file(local_project_root, host_config):
 
     return configuration_file
 
-def configure(local_project_root, host_config):
-    remote_root = host_config['remote_root']
+def get_configuration_file(local_project_root, host_config):
+    web_server_config = host_config['web_server_config']
+    remote_project_root = host_config['remote_root']
+    configuration_file = '\n'.join([
+        '#' * 80,
+        '# Supervisor config: /etc/supervisor/conf.d/uwsgi.conf',
+        '#' * 80,
+        _supervisor_configuration(local_project_root, remote_project_root, web_server_config),
+        '#' * 80,
+        '# Nginx config: /etc/nginx/sites-enabled/giftcard',
+        '#' * 80,
+        _nginx_configuration(local_project_root, remote_project_root, web_server_config),
+    ])
+
+    return configuration_file
+
+def _update(config_path, config_file):
     our_config_filename = 'giftcard'
-    with fabric.api.cd('/etc/apache2/sites-enabled'):
+    with fabric.api.cd(config_path):
         current_config_files = set(fabric.api.run('ls -1').splitlines())
         current_config_files.discard(our_config_filename)
         if current_config_files:
             fabric.api.sudo('rm -f ' + ' '.join(current_config_files))
         with tempfile.NamedTemporaryFile() as local_conf:
-            local_conf.write(get_configuration_file(local_project_root, host_config))
+            local_conf.write(config_file)
             local_conf.flush()
             fabric.api.put(local_conf.name, our_config_filename)
-    fabric.api.sudo('/etc/init.d/apache2 reload')
+
+def configure(local_project_root, host_config):
+    web_server_config = host_config['web_server_config']
+    remote_project_root = host_config['remote_root']
+    _update('/etc/nginx/sites-enabled',
+            _nginx_configuration(local_project_root, remote_project_root, web_server_config))
+    _update('/etc/supervisor/conf.d/',
+            _supervisor_configuration(local_project_root, remote_project_root, web_server_config))
+    fabric.api.sudo('/usr/bin/supervisorctl restart uwsgi')
+    fabric.api.sudo('/usr/sbin/nginx -s reload')
