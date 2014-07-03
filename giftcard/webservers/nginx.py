@@ -9,7 +9,7 @@ def _ban_msie(protocol, local_project_root, remote_project_root, web_server_conf
         return ''
     return '\n'.join([
         '  if ($http_user_agent ~ MSIE) {',
-        '    return 301 {}://{}{} break;'.format(protocol, web_server_config['fqdn'], web_server_config['ban_msie_redirect']),
+        '    rewrite ^ {}://{}{} break;'.format(protocol, web_server_config['fqdn'], web_server_config['ban_msie_redirect']),
         '  }',
     ])
 
@@ -30,6 +30,14 @@ def _fqdn_redirections(protocol, local_project_root, remote_project_root, web_se
         for bad_fqdn in bad_fqdns
     ])
 
+def _django_upstream():
+    return '\n'.join([
+        'upstream django {',
+        '  server unix:/tmp/__django.sock;',
+        '}',
+    ])
+
+
 def _favicon_redirect(protocol, local_project_root, remote_project_root, web_server_config):
     return '\n'.join([
         '  location = /favicon.ico {',
@@ -49,10 +57,6 @@ def _compression(protocol, local_project_root, remote_project_root, web_server_c
     ])
 
 # This needs to go in the supervisor's uwsgi process's environment
-# /etc/supervisor/conf.d/uwsgi.conf
-# command = /usr/bin/uwsgi --socket /tmp/__infinilab.sock
-#           --wsgi-file /opt/infinilab/wsgi.py --chmod-socket=666
-#                     --processes 16 -t 120 --disable-logging -M --need-app -b 32768
 def _global_wsgi_configuration(local_project_root, remote_project_root, web_server_config):
     processes = web_server_config['process_number'] if 'process_number' in web_server_config else '4'
     threads = web_server_config['thread_number'] if 'thread_number' in web_server_config else '1'
@@ -77,7 +81,7 @@ def _supervisor_configuration(local_project_root, remote_project_root, web_serve
 
 def _wsgi_configuration(protocol, local_project_root, remote_project_root, web_server_config):
     # all uwsgi configuration done in the supervisor uswgi config file
-    pass
+    return ''
 
 def _static_paths(protocol, local_project_root, remote_project_root, web_server_config):
     return '\n'.join([
@@ -93,6 +97,7 @@ def _static_paths(protocol, local_project_root, remote_project_root, web_server_
 def _virtual_server_prolougue(protocol, local_project_root, remote_project_root, web_server_config):
     return '\n'.join([
         '  server_name {};'.format(web_server_config['fqdn']),
+        '  charset utf-8;',
     ])
 
 def _uwsgi_server(protocol, local_project_root, remote_project_root, web_server_config):
@@ -122,16 +127,8 @@ def _virtual_server_config(protocol, local_project_root, remote_project_root, we
 
 def _openssl_config(protocol, local_project_root, remote_project_root, web_server_config):
     def _require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config):
-        ssl_config = web_server_config.get('ssl', None)
-        assert ssl_config # Called from within an SSL context
-        return '\n'.join([
-            '\n'.join([
-                '  location {} {{'.format(url),
-                '    ssl_verify_client optional_no_ca;',
-                '  }',
-                ])
-            for url in ssl_config.get('require_certificate_paths', [])
-        ])
+        # nginx doesn't support location-based HTTPS traffic (see ticket #317)
+        return ''
 
     ssl_config = web_server_config.get('ssl', None)
     if not ssl_config:
@@ -144,20 +141,18 @@ def _openssl_config(protocol, local_project_root, remote_project_root, web_serve
       '  ssl_session_timeout  30m;',
     ]
 
-    # might be unnecessary
-    if 'certificate_chain_file' in ssl_config:
-        lines.append('  ssl_client_certificate {};'.format(ssl_config['certificate_chain_file']))
+    # There is no certificate chain file in nginx;
+    # instead, the certificate chain file should be appended to the ssl_certificate file
 
-    # nginx sends client_certificate to clients and doesn't sent trusted_certificates
     if 'allowed_cas' in ssl_config:
-        lines.append('  ssl_trusted_certificate {};'.format(ssl_config['allowed_cas']))
+        lines.append('  ssl_client_certificate {};'.format(ssl_config['allowed_cas']))
 
     lines.append(_require_certificate_paths(protocol, local_project_root, remote_project_root, web_server_config))
     return '\n'.join(lines)
 
 def _gnutls_config(protocol, local_project_root, remote_project_root, web_server_config):
     # nginx doesn't support GnuTLS
-    pass
+    return ''
 
 def _virtual_server_that_redirects(protocol, target_protocol, local_project_root, remote_project_root, web_server_config):
     return '  return 301 {}://{}$request_uri;'.format(target_protocol, web_server_config['fqdn'])
@@ -187,6 +182,7 @@ def _virtual_server(protocol, local_project_root, remote_project_root, web_serve
 
 def _nginx_configuration(local_project_root, remote_project_root, web_server_config):
     configuration_file = '\n'.join([
+        _django_upstream(),
         _fqdn_redirections('https', local_project_root, remote_project_root, web_server_config),
         _virtual_server('http', local_project_root, remote_project_root, web_server_config),
         _virtual_server('https', local_project_root, remote_project_root, web_server_config) if web_server_config.get('ssl', None) else '',
