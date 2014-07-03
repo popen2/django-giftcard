@@ -3,6 +3,28 @@ import fabric.api
 import os
 
 class GiftcardCommand(BaseCommand):
+    args = '<hosts environments ...>'
+
+    def hosts(self, args):
+        from django.conf import settings
+        all_hosts = settings.GIFTCARD_HOSTS
+        if not args:
+            return all_hosts
+        hosts = []
+        try:
+            for env in args:
+                if env in settings.GIFTCARD_ENVS:
+                    for host in settings.GIFTCARD_ENVS[env]:
+                        if host in all_hosts and host not in hosts:
+                            hosts.append(host)
+        except:
+            # no environments
+            pass
+        for host in args:
+            if host in all_hosts and host not in hosts:
+                hosts.append(host)
+        return hosts
+
     def host_config(self):
         from django.conf import settings
         return settings.GIFTCARD_HOSTS[fabric.api.env.host_string]
