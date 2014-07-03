@@ -158,7 +158,6 @@ def _virtual_server_that_redirects(protocol, target_protocol, local_project_root
     return '  return 301 {}://{}$request_uri;'.format(target_protocol, web_server_config['fqdn'])
 
 def _virtual_server(protocol, local_project_root, remote_project_root, web_server_config):
-    print web_server_config.get('https_only', None)
     return dict(
         http = '\n'.join([
             'server {',
