@@ -8,7 +8,7 @@ class GiftcardCommand(BaseCommand):
         return settings.GIFTCARD_HOSTS[fabric.api.env.host_string]
 
     def webserver_handler(self):
-        from ..webservers import apache2, nginx
+        from ..webservers import apache2, nginx, default
 
         webserver_handlers = dict(
             nginx = nginx,
@@ -16,7 +16,7 @@ class GiftcardCommand(BaseCommand):
         )
 
         if 'web_server' not in self.host_config():
-            return None
+            return default
         web_server = self.host_config()['web_server']
         if web_server not in webserver_handlers:
             raise CommandError('Unknown web_server value {0}. Available configurators are {1}'.format(web_server, webserver_handlers.keys()))
