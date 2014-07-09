@@ -3,8 +3,7 @@ import fabric.api
 
 class Command(GiftcardCommand):
     def handle(self, *args, **kwargs):
-        from django.conf import settings
-        for host in settings.GIFTCARD_HOSTS:
+        for host in self.hosts(args):
             with fabric.api.settings(host_string=host):
                 self._upgrade()
                 self._install_packages()
