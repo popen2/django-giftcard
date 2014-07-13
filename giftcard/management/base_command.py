@@ -11,15 +11,12 @@ class GiftcardCommand(BaseCommand):
         if not args:
             return all_hosts
         hosts = []
-        try:
+        if hasattr(settings,'GIFTCARD_ENVS'):
             for env in args:
                 if env in settings.GIFTCARD_ENVS:
                     for host in settings.GIFTCARD_ENVS[env]:
                         if host in all_hosts and host not in hosts:
                             hosts.append(host)
-        except:
-            # no environments
-            pass
         for host in args:
             if host in all_hosts and host not in hosts:
                 hosts.append(host)
